@@ -1,6 +1,6 @@
-#**How to run**
+# **How to run**
 
-##**Shell**
+## **Shell**
 
 Fetching: 
 `./fetch site1 site2 ...`
@@ -8,7 +8,7 @@ Fetching:
 Metadata extraction: 
 `./fetch --metadata site1 site2 ...`
 
-##**Docker**
+## **Docker**
 
 `docker build -t  fetcher .`
 
