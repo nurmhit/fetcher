@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+
+import requests
+import sys
+import time
+import json
+from bs4 import BeautifulSoup
+from datetime import datetime
+
+
+class WebPageManager:
+    def __init__(self):
+        try:
+            with open(".metadata", "r") as m:
+                self.metadata = json.load(m)
+        except IOError:
+            self.metadata = {}
+
+    def run(self, args):
+        if args[0] == "--metadata":
+            for arg in args[1:]:
+                self._get_metadata(arg)
+        else:
+            for arg in args:
+                self._fetch(arg)
+            self._flush()
+
+    def _fetch(self, url):
+        try:
+            r = requests.get(url)
+        except Exception as e:
+            print(f"Error: {e}")
+            return
+        shorter_url = self._shorten_url(url)
+        soup = BeautifulSoup(r.content, features="html.parser")
+        with open(shorter_url + ".html", "w") as f:
+            f.write(r.text)
+        self.metadata[url] = {
+            "site": shorter_url,
+            "last fetch": str(datetime.fromtimestamp(time.time()).astimezone()),
+            "number of links": len(soup.find_all('a')),
+            "images": len(soup.find_all('img'))
+        }
+
+    def _flush(self):
+        with open(".metadata", "w") as m:
+            json.dump(self.metadata, m)
+
+    def _get_metadata(self, url):
+        if self.metadata.get(url) is None:
+            print("No metadata for this url yet")
+        for attr in self.metadata[url]:
+            print(f"{attr}: {self.metadata[url][attr]}")
+
+    def _shorten_url(self, url):
+        shorter_url = url[url.find('/') + 2:]
+        if shorter_url[-1] == '/':
+            shorter_url = shorter_url[:-1]
+        return shorter_url
+
+
+if __name__ == "__main__":
+    wpm = WebPageManager()
+    args = [arg for i, arg in enumerate(sys.argv) if i > 0]
+    wpm.run(args)
+
+
